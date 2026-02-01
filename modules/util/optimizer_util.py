@@ -692,4 +692,16 @@ OPTIMIZER_DEFAULT_PARAMETERS = {
         "initial_accumulator": 1e-6,
         "eps": 1e-3,
     },
+    Optimizer.AUTOMAGIC: {
+        "allora": True,
+        "eta": 2.0,
+        "orthograd": False,
+        "sinkgd_iters": 1,
+        "beta1": 0.9,
+        "weight_decay": 0.1,
+        "max_lr": 300,
+        "min_lr": 10,
+        "lr_bump": 0,
+        "use_kahan": True,
+    },
 }

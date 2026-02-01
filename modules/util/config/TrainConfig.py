@@ -144,6 +144,14 @@ class TrainOptimizerConfig(BaseConfig):
     kappa_p: float
     auto_kappa_p: False
     compile: False
+    allora: bool
+    eta: float
+    orthograd: bool
+    sinkgd_iters: int
+    min_lr: int
+    max_lr: int
+    lr_bump: int
+    use_kahan: bool
 
     def __init__(self, data: list[(str, Any, type, bool)]):
         super().__init__(data)
@@ -263,6 +271,14 @@ class TrainOptimizerConfig(BaseConfig):
         data.append(("kappa_p", None, float, True))
         data.append(("auto_kappa_p", False, bool, False))
         data.append(("compile", False, bool, False))
+        data.append(("allora", True, bool, False))
+        data.append(("eta", None, float, True))
+        data.append(("orthograd", False, bool, False))
+        data.append(("sinkgd_iters", None, int, True))
+        data.append(("min_lr", None, int, True))
+        data.append(("max_lr", None, int, True))
+        data.append(("lr_bump", None, int, True))
+        data.append(("use_kahan",True, bool, False))
 
         return TrainOptimizerConfig(data)
 

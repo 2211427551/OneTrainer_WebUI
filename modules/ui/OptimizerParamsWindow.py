@@ -199,6 +199,14 @@ class OptimizerParamsWindow(ctk.CTkToplevel):
             'kappa_p': {'title': 'Lion-K P-value', 'tooltip': 'Controls the Lp-norm geometry for the Lion update. 1.0 = Standard Lion (Sign update, coordinate-wise), best for Transformers. 2.0 = Spherical Lion (Normalized update, rotational invariant), best for Conv2d layers (in unet models). Values between 1.0 and 2.0 interpolate behavior between the two.', 'type': 'float'},
             'auto_kappa_p': {'title': 'Auto Lion-K', 'tooltip': 'Automatically determines the optimal P-value based on layer dimensions. Uses p=2.0 (Spherical) for 4D (Conv) tensors for stability and rotational invariance, and p=1.0 (Sign) for 2D (Linear) tensors for sparsity. Overrides the manual P-value. Recommend for unet models.', 'type': 'bool'},
             'compile': {'title': 'Compiled Optimizer', 'tooltip': 'Enables PyTorch compilation for the optimizer internal step logic. This is intended to improve performance by allowing PyTorch to fuse operations and optimize the computational graph.', 'type': 'bool'},
+            'allora': {'title': 'Allora', 'tooltip': 'Enable Allora scaling', 'type': 'bool'},
+            'eta': {'title': 'Eta', 'tooltip': 'Eta parameter for Allora', 'type': 'float'},
+            'orthograd': {'title': 'Orthograd', 'tooltip': 'Enable Orthograd', 'type': 'bool'},
+            'sinkgd_iters': {'title': 'SinkGD Iters', 'tooltip': 'Number of SinkGD iterations', 'type': 'int'},
+            'min_lr': {'title': 'Min LR', 'tooltip': 'Minimum Learning Rate', 'type': 'int'},
+            'max_lr': {'title': 'Max LR', 'tooltip': 'Maximum Learning Rate', 'type': 'int'},
+            'lr_bump': {'title': 'LR Bump', 'tooltip': 'Learning Rate Bump', 'type': 'int'},
+            'use_kahan': {'title': 'Use Kahan', 'tooltip': 'Enable Kahan Summation for tracking errors', 'type': 'bool'},
         }
         # @formatter:on
 

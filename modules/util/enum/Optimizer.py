@@ -79,6 +79,9 @@ class Optimizer(Enum):
     AIDA = 'AIDA'
     YOGI = 'YOGI'
 
+    # Automagic
+    AUTOMAGIC = 'AUTOMAGIC'
+
     @property
     def is_adaptive(self):
         return self in [
