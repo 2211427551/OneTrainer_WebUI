@@ -30,6 +30,10 @@ class SampleConfig(BaseConfig):
     base_image_path: str
     mask_image_path: str
 
+    # MeanCache acceleration
+    use_meancache: bool
+    meancache_preset: str
+
     def __init__(self, data: list[(str, Any, type, bool)]):
         super().__init__(data)
 
@@ -70,5 +74,8 @@ class SampleConfig(BaseConfig):
         data.append(("sample_inpainting", False, bool, False))
         data.append(("base_image_path", "", str, False))
         data.append(("mask_image_path", "", str, False))
+
+        data.append(("use_meancache", False, bool, False))
+        data.append(("meancache_preset", "balanced", str, False))
 
         return SampleConfig(data)

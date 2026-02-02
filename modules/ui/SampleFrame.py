@@ -120,3 +120,15 @@ class SampleFrame(ctk.CTkFrame):
                                   allow_model_files=False,
                                   allow_image_files=True,
                                   )
+
+            # MeanCache acceleration
+            components.label(bottom_frame, 7, 0, "MeanCache:",
+                             tooltip="Enable MeanCache for ~1.4x-2.0x sampling speedup (Flow Matching models only)")
+            components.switch(bottom_frame, 7, 1, self.ui_state, "use_meancache")
+
+            # MeanCache preset
+            components.label(bottom_frame, 7, 2, "Preset:",
+                             tooltip="Quality (1.4x) / Balanced (1.67x) / Speed (1.8x) / Turbo (2.0x)")
+            components.options(bottom_frame, 7, 3, ["quality", "balanced", "speed", "turbo"], 
+                             self.ui_state, "meancache_preset")
+

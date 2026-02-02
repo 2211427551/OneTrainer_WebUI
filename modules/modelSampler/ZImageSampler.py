@@ -12,10 +12,14 @@ from modules.util.enum.ModelType import ModelType
 from modules.util.enum.NoiseScheduler import NoiseScheduler
 from modules.util.enum.VideoFormat import VideoFormat
 from modules.util.torch_util import torch_gc
+from modules.util.sampler.zimage_meancache_wrapper import ZImageMeanCacheWrapper
 
 import torch
+import logging
 
 from tqdm import tqdm
+
+logger = logging.getLogger(__name__)
 
 
 class ZImageSampler(BaseModelSampler):
@@ -44,6 +48,8 @@ class ZImageSampler(BaseModelSampler):
             diffusion_steps: int,
             cfg_scale: float,
             noise_scheduler: NoiseScheduler,
+            use_meancache: bool = False,
+            meancache_preset: str = "balanced",
             on_update_progress: Callable[[int, int], None] = lambda _, __: None,
     ) -> ModelSamplerOutput:
         with self.model.autocast_context:
@@ -93,13 +99,26 @@ class ZImageSampler(BaseModelSampler):
                 extra_step_kwargs["generator"] = generator
 
             self.model.transformer_to(self.train_device)
+            
+            # Initialize MeanCache if enabled
+            meancache = None
+            active_transformer = transformer
+            if use_meancache:
+                meancache = ZImageMeanCacheWrapper(
+                    transformer=transformer,
+                    preset=meancache_preset,
+                    enabled=True,
+                )
+                active_transformer = meancache
+                logger.info(f"[MeanCache] Enabled with preset: {meancache_preset}")
+            
             for i, timestep in enumerate(tqdm(timesteps, desc="sampling")):
                 latent_model_input = latent_image.unsqueeze(2).to(dtype=self.model.train_dtype.torch_dtype())
                 latent_model_input = torch.cat([latent_model_input] * batch_size)
                 latent_model_input_list = list(latent_model_input.unbind(dim=0))
                 timestep_model_input = timestep.unsqueeze(0)
                 assert timestep_model_input.ndim ==  1
-                output_list = transformer(
+                output_list = active_transformer(
                     latent_model_input_list,
                     (1000 - timestep_model_input) / 1000,
                     prompt_embedding,
@@ -117,6 +136,11 @@ class ZImageSampler(BaseModelSampler):
                 on_update_progress(i + 1, len(timesteps))
 
             self.model.transformer_to(self.temp_device)
+            
+            # Print MeanCache summary if enabled
+            if meancache is not None:
+                meancache.print_summary()
+            
             torch_gc()
             self.model.vae_to(self.train_device)
 
@@ -153,6 +177,8 @@ class ZImageSampler(BaseModelSampler):
             diffusion_steps=sample_config.diffusion_steps,
             cfg_scale=sample_config.cfg_scale,
             noise_scheduler=sample_config.noise_scheduler,
+            use_meancache=sample_config.use_meancache,
+            meancache_preset=sample_config.meancache_preset,
             on_update_progress=on_update_progress,
         )
 
