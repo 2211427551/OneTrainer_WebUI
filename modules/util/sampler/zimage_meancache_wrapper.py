@@ -21,31 +21,31 @@ logger = logging.getLogger(__name__)
 MEANCACHE_PRESETS = {
     "quality": {
         "rel_l1_thresh": 0.15,
-        "skip_budget": 0.25,
-        "start_step": 3,
+        "skip_budget": 0.30,
+        "start_step": 2,
         "gamma": 2.0,
-        "peak_threshold": 0.20,
+        "peak_threshold": 0.25,
     },
     "balanced": {
         "rel_l1_thresh": 0.12,
-        "skip_budget": 0.35,
+        "skip_budget": 0.40,
         "start_step": 2,
         "gamma": 2.0,
-        "peak_threshold": 0.15,
+        "peak_threshold": 0.20,
     },
     "speed": {
         "rel_l1_thresh": 0.10,
-        "skip_budget": 0.42,
-        "start_step": 2,
-        "gamma": 2.0,
-        "peak_threshold": 0.12,
-    },
-    "turbo": {
-        "rel_l1_thresh": 0.08,
         "skip_budget": 0.50,
         "start_step": 1,
         "gamma": 2.0,
-        "peak_threshold": 0.10,
+        "peak_threshold": 0.18,
+    },
+    "turbo": {
+        "rel_l1_thresh": 0.08,
+        "skip_budget": 0.55,
+        "start_step": 1,
+        "gamma": 2.0,
+        "peak_threshold": 0.15,
     },
 }
 
@@ -63,14 +63,15 @@ class TrajectoryScheduler:
         gamma: float = 2.0,
         peak_threshold: float = 0.15,
         min_compute_steps: int = 4,
-        critical_start_ratio: float = 0.20,
-        critical_end_ratio: float = 0.85
+        critical_start_ratio: float = 0.10,  # Only protect first 10%
+        critical_end_ratio: float = 0.95     # Only protect last 5%
     ):
         self.total_steps = max(1, total_steps)
-        self.skip_budget = max(0.0, min(0.5, skip_budget))
+        self.skip_budget = max(0.0, min(0.6, skip_budget))  # Allow up to 60%
         self.gamma = gamma
         self.peak_threshold = peak_threshold
         self.min_compute_steps = min_compute_steps
+        # Reduced protected zones for more aggressive skipping
         self.critical_start_ratio = critical_start_ratio
         self.critical_end_ratio = critical_end_ratio
         
@@ -106,8 +107,8 @@ class TrajectoryScheduler:
         if len(skip_candidates) == 0:
             return
         
-        # Calculate minimum spacing between skips
-        min_spacing = max(2, len(skip_candidates) // (max_skips + 1))
+        # Calculate minimum spacing between skips (reduced for more skips)
+        min_spacing = max(1, len(skip_candidates) // (max_skips + 1))
         
         # Assign skips with even spacing
         skips_assigned = 0
