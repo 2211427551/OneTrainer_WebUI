@@ -118,6 +118,7 @@ class BaseZImageSetup(
                 scaled_latent_image.shape[0],
                 config,
                 shift = shift if config.dynamic_timestep_shifting else config.timestep_shift,
+                train_progress=train_progress,
             )
 
             scaled_noisy_latent_image, sigma = self._add_noise_discrete(

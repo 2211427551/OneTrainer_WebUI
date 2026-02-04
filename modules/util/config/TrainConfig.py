@@ -474,6 +474,7 @@ class TrainConfig(BaseConfig):
 
     timestep_shift: float
     dynamic_timestep_shifting: bool
+    progressive_timestep_distribution: bool  # Gradually transition from uniform to target distribution
 
     # unet
     unet: TrainModelPartConfig
@@ -1053,6 +1054,7 @@ class TrainConfig(BaseConfig):
         data.append(("noising_bias", 0.0, float, False))
         data.append(("timestep_shift", 1.0, float, False))
         data.append(("dynamic_timestep_shifting", False, bool, False))
+        data.append(("progressive_timestep_distribution", False, bool, False))
 
 
         # unet

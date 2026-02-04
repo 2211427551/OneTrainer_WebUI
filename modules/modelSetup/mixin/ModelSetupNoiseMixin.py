@@ -126,9 +126,20 @@ class ModelSetupNoiseMixin(metaclass=ABCMeta):
             batch_size: int,
             config: TrainConfig,
             shift: float = None,
+            train_progress: object = None,
     ) -> Tensor:
         if shift is None:
             shift = config.timestep_shift
+
+        # Calculate Progressive parameters
+        progress_ratio = 1.0
+        if not deterministic and getattr(config, 'progressive_timestep_distribution', False) and train_progress is not None and config.epochs > 0:
+             # Using epoch ratio
+             progress_ratio = train_progress.epoch / float(config.epochs)
+             progress_ratio = max(0.0, min(1.0, progress_ratio))
+             
+             # Interpolate shift: from 1.0 (Uniform) to target shift
+             shift = 1.0 + (shift - 1.0) * progress_ratio
 
         if deterministic:
             # -1 is for zero-based indexing
@@ -169,8 +180,20 @@ class ModelSetupNoiseMixin(metaclass=ABCMeta):
                     u = 1.0 - u - scale * (torch.cos(math.pi / 2.0 * u) ** 2.0 - 1.0 + u)
                     timestep = u * num_timestep + min_timestep
 
+                # Progressive Blending (Continuous)
+                if not deterministic and getattr(config, 'progressive_timestep_distribution', False) and progress_ratio < 1.0:
+                    mask = torch.rand(batch_size, generator=generator, device=generator.device) > progress_ratio
+                    if mask.any():
+                        uni = min_timestep + (max_timestep - min_timestep) \
+                              * torch.rand(batch_size, generator=generator, device=generator.device)
+                        timestep = torch.where(mask, uni, timestep)
+
                 timestep = num_train_timesteps * shift * timestep / ((shift - 1) * timestep + num_train_timesteps)
             else:
+                # Force weight recomputation if dealing with dynamic/progressive shifts
+                if getattr(config, 'progressive_timestep_distribution', False) or config.dynamic_timestep_shifting:
+                    self.__weights = None
+
                 # Shifting a discrete distribution is done in two steps:
                 # 1. Apply the inverse shift to the linspace.
                 #    This moves the sample points of the function to their shifted place.
@@ -206,7 +229,30 @@ class ModelSetupNoiseMixin(metaclass=ABCMeta):
                         weights = torch.clamp(-weight * ((linspace - bias) ** 2) + 2, min=0.0)
                         weights *= linspace_derivative
                         self.__weights = weights.to(device=generator.device)
+                elif config.timestep_distribution == TimestepDistribution.NEG_SQUARE:
+                    # -x² distribution: emphasizes middle timesteps (t≈0.5)
+                    # and de-emphasizes extremes (t≈0, t≈1) to prevent loss spikes
+                    # Formula: 1 - (2x - 1)² = -4(x - 0.5)² + 1
+                    if self.__weights is None:
+                        bias = config.noising_bias  # Allows shifting the peak
+                        weight = config.noising_weight + 1.0  # Allows adjusting the width
+                        
+                        # Centered parabola: peaks at 0.5, zero at 0 and 1
+                        center = 0.5 + bias * 0.5  # bias shifts the center
+                        weights = 1.0 - weight * ((linspace - center) ** 2) / 0.25
+                        weights = torch.clamp(weights, min=0.0)
+                        weights *= linspace_derivative
+                        self.__weights = weights.to(device=generator.device)
+                
                 samples = torch.multinomial(self.__weights, num_samples=batch_size, replacement=True, generator=generator) + min_timestep
+                
+                # Progressive Blending (Discrete)
+                if not deterministic and getattr(config, 'progressive_timestep_distribution', False) and progress_ratio < 1.0:
+                    samples_uniform = torch.randint(min_timestep, max_timestep, (batch_size,), generator=generator, device=generator.device)
+                    mask = torch.rand(batch_size, generator=generator, device=generator.device) > progress_ratio
+                    # Type casting to match samples
+                    samples = torch.where(mask, samples_uniform.to(samples.dtype), samples)
+
                 timestep = samples.to(dtype=torch.long, device=generator.device)
 
             return timestep.int()
