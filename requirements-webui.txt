@@ -1,0 +1,6 @@
+fastapi==0.115.8
+uvicorn[standard]==0.32.1
+python-multipart==0.0.20
+huggingface-hub==0.34.4
+gradio==4.44.1
+audioop-lts; python_version >= "3.13"

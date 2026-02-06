@@ -47,6 +47,11 @@ def command_thread_function(commands: TrainCommands,filename : str,stop_event):
             continue
 
         commands.merge(remote_commands)
+        try:
+            with open(filename, "wb"):
+                pass
+        except FileNotFoundError:
+            break
 
 
 def main():

@@ -1,39 +1,25 @@
-# development
-.idea
-*.bak
-*.pyc
-*.swp
-*~
-debug*.ipynb
-debug*.py
-/debug*
-
-# user data
-/workspace*
-/models*
-/training_concepts
-/training_samples
-/training_user_settings
-/external
-/update.var
-config.json
-secrets.json
-*.zip
-
 # environments
 /.venv*
 /venv*
+/.ot-webui-venv*
 /conda_env*
+/.ot-webui-conda*
 .python-version
 *.egg-info
+/.trae*
+# logs
+/logs/
+*.log
 
-# pixi environments
-.pixi
-pixi.lock
-pixi.toml
+# WebUI Data & Cache
+/.ot-webui/
+/train_config_schema.json
 
-# misc files
-/src
-train.bat
-debug_report.log
-config_diff.txt
+# weights
+/models/
+/output/
+
+# OS/IDE
+.DS_Store
+.vscode/
+.idea/
